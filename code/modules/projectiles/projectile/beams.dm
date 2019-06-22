@@ -28,11 +28,11 @@
 	mass = 0
 
 /obj/item/projectile/beam/smalllaser
-	force = 10
+	force = 20
 	armor_penetration = 10
 
 /obj/item/projectile/beam/midlaser
-	force = 25
+	force = 50
 	armor_penetration = 20
 	distance_falloff = 1
 
@@ -40,7 +40,7 @@
 	name = "heavy laser"
 	icon_state = "heavylaser"
 	fire_sound = 'sound/weapons/lasercannonfire.ogg'
-	force = 35
+	force = 70
 	armor_penetration = 30
 	distance_falloff = 0.5
 
@@ -52,7 +52,7 @@
 	name = "x-ray beam"
 	icon_state = "xray"
 	fire_sound = 'sound/weapons/laser3.ogg'
-	force = 13
+	force = 26
 	armor_penetration = 30
 	penetration_modifier = 0.8
 	damtype = DAM_ENERGY
@@ -62,14 +62,14 @@
 	impact_type = /obj/effect/projectile/laser/xray/impact
 
 /obj/item/projectile/beam/xray/midlaser
-	force = 25
+	force = 50
 	armor_penetration = 50
 
 /obj/item/projectile/beam/pulse
 	name = "pulse"
 	icon_state = "u_laser"
 	fire_sound='sound/weapons/pulse.ogg'
-	force = 10 //lower damage, but fires in bursts
+	force = 20 //lower damage, but fires in bursts
 	damtype = DAM_LASER
 
 	muzzle_type = /obj/effect/projectile/laser/pulse/muzzle
@@ -77,33 +77,33 @@
 	impact_type = /obj/effect/projectile/laser/pulse/impact
 
 /obj/item/projectile/beam/pulse/mid
-	force = 15
+	force = 30
 
 /obj/item/projectile/beam/pulse/heavy
-	force = 25
+	force = 50
 
 /obj/item/projectile/beam/pulse/destroy
 	name = "destroyer pulse"
-	force = 30 //badmins be badmins I don't give a fuck
+	force = 60 //badmins be badmins I don't give a fuck
 	armor_penetration = 50
 
 /obj/item/projectile/beam/pulse/destroy/on_hit(var/atom/target, var/blocked = 0)
 	if(isturf(target))
 		target.ex_act(2)
 	..()
-	
+
 /obj/item/projectile/beam/pulse/skrell
 	icon_state = "pu_laser"
-	force = 20
+	force = 40
 	muzzle_type = /obj/effect/projectile/laser/pulse/skrell/muzzle
 	tracer_type = /obj/effect/projectile/laser/pulse/skrell/tracer
 	impact_type = /obj/effect/projectile/laser/pulse/skrell/impact
-	
+
 /obj/item/projectile/beam/pulse/skrell/heavy
-	force = 30
-	
+	force = 60
+
 /obj/item/projectile/beam/pulse/skrell/single
-	force = 50
+	force = 100
 
 /obj/item/projectile/beam/emitter
 	name = "emitter beam"
@@ -171,7 +171,7 @@
 	name = "sniper beam"
 	icon_state = "xray"
 	fire_sound = 'sound/weapons/marauder.ogg'
-	force = 40
+	force = 80
 	armor_penetration = 10
 	stun = 3
 	weaken = 3
@@ -187,7 +187,7 @@
 	icon_state = "stun"
 	fire_sound = 'sound/weapons/Taser.ogg'
 	sharpness = 0
-	agony = 20
+	agony = 30
 	damtype = DAM_STUN
 
 	muzzle_type = /obj/effect/projectile/stun/muzzle
@@ -196,25 +196,25 @@
 
 /obj/item/projectile/beam/stun/heavy
 	name = "heavy stun beam"
-	agony = 25
+	agony = 50
 
 /obj/item/projectile/beam/stun/shock
 	name = "shock beam"
 	damtype = DAM_ELECTRIC
 	force = 10
-	agony  = 5
+	agony  = 10
 	fire_sound='sound/weapons/pulse.ogg'
 
 /obj/item/projectile/beam/stun/shock/heavy
 	name = "heavy shock beam"
 	force = 20
-	agony  = 10
+	agony  = 20
 
 /obj/item/projectile/beam/plasmacutter
 	name = "plasma arc"
 	icon_state = "omnilaser"
 	fire_sound = 'sound/weapons/plasma_cutter.ogg'
-	force = 15
+	force = 20
 	sharpness = 3
 	damtype = DAM_ENERGY
 	kill_count = 5

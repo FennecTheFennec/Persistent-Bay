@@ -129,7 +129,7 @@
 	name = "rubber bullet"
 	damtype = DAM_BLUNT
 	force = 2.5
-	agony = 15
+	agony = 30
 	embed = 0
 	sharpness = 0
 	penetration_modifier = 0.1
@@ -158,7 +158,7 @@
 //	9mm Bullet
 //---------------------------------------------------
 /obj/item/projectile/bullet/pistol/c9mm
-	force = 8 //9mm, .38, etc
+	force = 25 //9mm, .38, etc
 	armor_penetration = 13.5
 	penetration_modifier = 0.8
 	distance_falloff = 3
@@ -166,7 +166,7 @@
 	distance_falloff = 4
 
 /obj/item/projectile/bullet/smg/c9mm //SMGs gotta be nerfed a bit since they fire quickly
-	force = 7
+	force = 19
 	armor_penetration = 10
 	penetration_modifier = 0.6
 	distance_falloff = 4
@@ -175,7 +175,7 @@
 //	.22lr Bullet
 //---------------------------------------------------
 /obj/item/projectile/bullet/pistol/c22lr
-	force = 8 //9mm, .38, etc
+	force = 25 //9mm, .38, etc
 	armor_penetration = 2
 	penetration_modifier = 0.5
 	distance_falloff = 5
@@ -184,7 +184,7 @@
 //	.45 Bullet
 //---------------------------------------------------
 /obj/item/projectile/bullet/pistol/c45
-	force = 12 //.45
+	force = 30 //.45
 	armor_penetration = 14.5
 	penetration_modifier = 1.2
 	distance_falloff = 4
@@ -192,7 +192,7 @@
 	distance_falloff = 6
 
 /obj/item/projectile/bullet/smg/c45 //SMGs gotta be nerfed a bit since they fire quickly
-	force = 10
+	force = 24
 	armor_penetration = 12
 	penetration_modifier = 1.2
 	distance_falloff = 4
@@ -202,7 +202,7 @@
 //---------------------------------------------------
 /obj/item/projectile/bullet/pistol/c357
 	fire_sound = 'sound/weapons/gunshot/gunshot_strong.ogg'
-	force = 16 
+	force = 32
 	penetration_modifier = 0.8
 	armor_penetration = 16
 
@@ -210,7 +210,7 @@
 //	.38 Bullet
 //---------------------------------------------------
 /obj/item/projectile/bullet/pistol/c38
-	force = 12 
+	force = 25
 	penetration_modifier = 0.8
 	armor_penetration = 12
 	distance_falloff = 3
@@ -220,7 +220,7 @@
 //---------------------------------------------------
 /obj/item/projectile/bullet/pistol/c44
 	fire_sound = 'sound/weapons/gunshot/gunshot_strong.ogg'
-	force = 18 //.44 magnum or something
+	force = 35 //.44 magnum or something
 	armor_penetration = 25
 	penetration_modifier = 1.0
 	distance_falloff = 2.5
@@ -228,9 +228,9 @@
 //---------------------------------------------------
 //	.50 Bullet
 //---------------------------------------------------
-/obj/item/projectile/bullet/pistol/c50 
+/obj/item/projectile/bullet/pistol/c50
 	fire_sound = 'sound/weapons/gunshot/gunshot_strong.ogg'
-	force = 25 //.50AE
+	force = 40 //.50AE
 	armor_penetration = 30
 	penetration_modifier = 1.8
 	distance_falloff = 2.5
@@ -239,7 +239,7 @@
 //	.50 Bullet Revolver
 //---------------------------------------------------
 /obj/item/projectile/bullet/revolver/c50 //revolvers
-	force = 28 //Revolvers get snowflake bullets, to keep them relevant
+	force = 40 //Revolvers get snowflake bullets, to keep them relevant
 	armor_penetration = 30
 	penetration_modifier = 1.8
 	distance_falloff = 2.5
@@ -250,7 +250,7 @@
 //4mm. Tiny, very low damage, does not embed, but has very high penetration. Only to be used for the experimental SMG.
 /obj/item/projectile/bullet/flechette
 	fire_sound = 'sound/weapons/gunshot/gunshot_4mm.ogg'
-	force = 8
+	force = 16
 	penetrating = 1
 	penetration_modifier = 0.3
 	armor_penetration = 70
@@ -265,7 +265,7 @@
 /obj/item/projectile/bullet/shotgun
 	name = "slug"
 	fire_sound = 'sound/weapons/gunshot/shotgun.ogg'
-	force = 20
+	force = 40
 	penetrating = 1
 	armor_penetration = 20
 	penetration_modifier = 1.5
@@ -279,7 +279,7 @@
 	name = "beanbag"
 	damtype = DAM_BLUNT
 	force = 5
-	agony = 25
+	agony = 50
 	embed = 0
 	penetration_modifier = 0.1
 	armor_penetration = 0
@@ -295,7 +295,7 @@
 /obj/item/projectile/bullet/pellet/shotgun
 	name = "shrapnel"
 	fire_sound = 'sound/weapons/gunshot/shotgun.ogg'
-	force = 3
+	force = 6
 	pellets = 6
 	range_step = 1
 	spread_step = 10
@@ -311,7 +311,7 @@
 	name = "rubber ball"
 	damtype = DAM_BLUNT
 	force = 1
-	agony = 10
+	agony = 20
 	embed = 0
 	sharpness = 0
 	range_step = 1
@@ -327,7 +327,7 @@
 //---------------------------------------------------
 /obj/item/projectile/bullet/rifle
 	fire_sound = 'sound/weapons/gunshot/gunshot3.ogg'
-	force = 15
+	force = 30
 	armor_penetration = 25
 	penetration_modifier = 1.5
 	penetrating = 1
@@ -338,7 +338,7 @@
 //---------------------------------------------------
 /obj/item/projectile/bullet/rifle/c556
 	fire_sound = 'sound/weapons/gunshot/gunshot3.ogg'
-	force = 15
+	force = 35
 	armor_penetration = 25
 	penetration_modifier = 1.5
 	penetrating = 1
@@ -352,7 +352,7 @@
 //---------------------------------------------------
 /obj/item/projectile/bullet/rifle/c762
 	fire_sound = 'sound/weapons/gunshot/gunshot2.ogg'
-	force = 26
+	force = 35
 	armor_penetration = 30
 	penetration_modifier = 1.8
 	distance_falloff = 2
@@ -365,7 +365,7 @@
 //---------------------------------------------------
 /obj/item/projectile/bullet/rifle/c145
 	fire_sound = 'sound/weapons/gunshot/sniper.ogg'
-	force = 30
+	force = 45
 	weaken = 2
 	penetrating = 5
 	armor_penetration = 80
@@ -378,7 +378,7 @@
 //	14.5mm Rifle Armor Piercing Discarding Sabot
 //---------------------------------------------------
 /obj/item/projectile/bullet/rifle/c145/apds
-	force = 35
+	force = 70
 	penetrating = 6
 	armor_penetration = 95
 	penetration_modifier = 1.6 //Internal damage, nothing to do with penetration..
@@ -390,7 +390,7 @@
 //	Gyrojet Rocket
 //---------------------------------------------------
 /obj/item/projectile/bullet/gyro
-	force = 25
+	force = 50
 	penetrating = 1
 	armor_penetration = 10
 	penetration_modifier = 1.5

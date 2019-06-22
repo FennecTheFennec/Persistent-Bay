@@ -11,7 +11,7 @@
 	icon_state = "bullet"
 	fire_sound = 'sound/weapons/gunshot/gunshot_pistol.ogg'
 	force = 5
-	agony = 10
+	agony = 20
 	kill_count = 15 //if the shell hasn't hit anything after travelling this far it just explodes.
 	muzzle_type = /obj/effect/projectile/bullet/muzzle
 	damtype = DAM_BULLET
@@ -44,7 +44,7 @@
 //blinds people like the flash round, but in a larger area and can also be used for temporary illumination
 /obj/item/projectile/energy/flash/flare
 	force = 10
-	agony = 25
+	agony = 35
 	fire_sound = 'sound/weapons/gunshot/shotgun.ogg'
 	flash_range = 2
 	brightness = 15
@@ -62,7 +62,7 @@
 	icon_state = "spark"
 	fire_sound = 'sound/weapons/Taser.ogg'
 	nodamage = 1
-	agony = 30
+	agony = 40
 	damtype = DAM_PAIN //Damage will be handled on the MOB side, to prevent window shattering.
 	step_delay = 0.7
 
@@ -72,7 +72,7 @@
 /obj/item/projectile/energy/electrode/stunshot
 	nodamage = 0
 	force = 10
-	agony = 35
+	agony = 45
 	damtype = DAM_STUN
 	armor_penetration = 10
 
@@ -99,14 +99,14 @@
 	force = 10
 	damtype = DAM_BULLET
 	nodamage = 0
-	agony = 35
+	agony = 45
 	stutter = 10
 
 
 /obj/item/projectile/energy/bolt/large
 	name = "largebolt"
 	force = 15
-	agony = 40
+	agony = 50
 
 
 /obj/item/projectile/energy/neurotoxin
@@ -131,7 +131,7 @@
 	armor_penetration = 10
 	kill_count = 4
 	force = 5
-	agony = 40
+	agony = 50
 	damtype = DAM_STUN
 	vacuum_traversal = 0
 
