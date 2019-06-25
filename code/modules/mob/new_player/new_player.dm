@@ -27,7 +27,7 @@
 	..()
 	//verbs += /mob/proc/toggle_antag_pool //no antags
 
-/mob/new_player/proc/new_player_panel(force = FALSE)
+/mob/new_player/proc/new_player_panel(force = TRUE)
 	if(!SScharacter_setup.initialized && !force)
 		return // Not ready yet.
 
@@ -303,43 +303,78 @@
 	if(!found_slot)
 		to_chat(src, "Your character slots are full. Import failed.")
 		return
-	var/mob/living/character = SScharacter_setup.load_import_character(chosen_slot, ckey)
+	var/mob/living/carbon/human/character = SScharacter_setup.load_import_character(chosen_slot, ckey)
+	
 	if(!character)
 		return
+	if(!character.mind)
+		character.mind = new()
 	character.revive()
 	character.real_name = SScharacter_setup.peek_import_name(chosen_slot, ckey)
-	var/list/L = recursive_content_check(character)
+	var/list/L = recursive_content_check(character, recursion_limit = 5)
 	var/list/spared = list()
+	var/obj/item/weapon/storage/bag/plasticbag = new()
 	for(var/ind in 1 to L.len)
-		var/atom/A = L[ind]
+		var/atom/movable/A = L[ind]
 		if(istype(A, /obj/item/clothing/accessory/toggleable/hawaii))
 			var/obj/item/clothing/accessory/toggleable/hawaii = A
 			hawaii.has_suit = null
 			spared |= A
+			A.loc = plasticbag
 		if(istype(A, /obj/item/weapon/paper))
 			spared |= A
+			A.loc = plasticbag
 		if(istype(A, /obj/item/weapon/photo))
 			spared |= A
+			A.loc = plasticbag
+	for(var/obj/item/W in character)
+		character.drop_from_inventory(W)
+	character.update_languages()
+	character.update_citizenship()
+	character.spawn_cit = CITIZEN
+	//DNA should be last
+	var/datum/computer_file/report/crew_record/R = Retrieve_Record(character.real_name)
+	if(R)
+		R.linked_account.money = 1000
+		R.email = new()
+		R.email.login = character.real_name
+		R.citizenship = CITIZEN
+	else
+		client.prefs.real_name = character.real_name
+		client.prefs.setup_new_accounts(character) //make accounts before! Outfit setup needs the record set
+
+
+	character.dna.ResetUIFrom()
+	character.dna.ready_dna(character)
+	character.dna.b_type = client.prefs.b_type
+	character.sync_organ_dna()
+	character.spawn_loc = "nexus"
+	// Do the initial caching of the player's body icons.
+	character.force_update_limbs()
+	character.update_eyes()
+	character.regenerate_icons()
 	character.spawn_type = CHARACTER_SPAWN_TYPE_IMPORT //For first time spawn
 	var/decl/hierarchy/outfit/clothes
-	var/datum/world_faction/F = get_faction(GLOB.using_map.default_faction_uid) //Imported char don't have valid factions
-	clothes = outfit_by_type(F.starter_outfit)
+	clothes = outfit_by_type(/decl/hierarchy/outfit/nexus/starter)
 	ASSERT(istype(clothes))
-
-	clothes.uniform = /obj/item/clothing/under/color/lightpurple
-	clothes.equip(character)
+	dressup_human(character, clothes)
 	var/obj/item/weapon/card/id/W = new (character)
 	W.registered_name = character.real_name
 	W.selected_faction = GLOB.using_map.default_faction_uid
 	character.equip_to_slot_or_store_or_drop(character, slot_wear_id)
-	
+	var/obj/item/weapon/book/multipage/guide
+	var/datum/book_constructor/starterbook/bookconstruct = new()
+	guide = bookconstruct.construct()
+	guide.icon_state= "anomaly"
+	character.equip_to_slot_or_del(guide, slot_r_hand)
 	for(var/ind in 1 to spared.len)
 		var/atom/A = spared[ind]
-		character.equip_to_slot_or_store_or_drop(A, slot_l_hand)
+		message_admins("recovered ITEM!![A]")
+		character.equip_to_slot_or_store_or_drop(A, slot_r_hand)
+	SScharacter_setup.delete_import_character(chosen_slot, ckey)
 	SScharacter_setup.save_character(found_slot, client.ckey, character)
 	to_chat(src, "Import Successful. [character.real_name] saved to slot [found_slot].")
-	
-	
+
 /mob/new_player/proc/selectImportPanel()
 	var/data = "<div align='center'><br>"
 	data += "<b>Select the character you want to import.</b><br>"
@@ -422,7 +457,8 @@
 				continue
 			M.ckey = ckey
 			M.update_icons()
-			M.redraw_inv() //Make sure icons shows up
+			spawn(200)
+				M.redraw_inv() //Make sure icons shows up
 			qdel(src)
 			return
 
@@ -437,6 +473,12 @@
 		return
 
 	var/mob/character = SScharacter_setup.load_character(chosen_slot, ckey)
+	if(!character)
+		sleep(100)
+	if(!character)
+		message_admins("[ckey] load character failed during join.")
+		to_chat(src, "Your character is not loading correctly. Contact Brawler.")
+		return
 	Retrieve_Record(character.real_name)
 	var/turf/spawnTurf = locate(0,0,0) //Instead of null start with 0,0,0 because the unsafe spawn check will kick in and warn the user if there's something wrong
 
@@ -470,7 +512,10 @@
 			log_and_message_admins("WARNING! No cryopods avalible for spawning! Get some spawned and connected to the starting factions uid (req_access_faction)")
 			spawnTurf = locate(102, 98, 1)
 
-	else if(character.spawn_type == CHARACTER_SPAWN_TYPE_FRONTIER_BEACON)
+	else if(character.spawn_type == CHARACTER_SPAWN_TYPE_FRONTIER_BEACON || character.spawn_type == CHARACTER_SPAWN_TYPE_IMPORT)
+		var/obj/item/weapon/card/id/W = character.get_idcard()
+		if(W)
+			W.selected_faction = "nexus"
 		var/list/obj/structure/frontier_beacon/possibles = list()
 		var/list/obj/structure/frontier_beacon/possibles_unsafe = list()
 		for(var/obj/structure/frontier_beacon/beacon in GLOB.frontierbeacons)
@@ -518,10 +563,10 @@
 	character.after_spawn()
 
 	if(!character.mind)
-		mind.active = 0
+		mind.active = 1
 		mind.original = character
 		mind.transfer_to(character)	//won't transfer key since the mind is not active
-		
+
 	character.forceMove(spawnTurf)
 	character.stored_ckey = key
 	character.key = key
@@ -588,7 +633,7 @@
 	to_chat(newchar, "<span class='danger'>Aboard the cruiser ecaping from the Alpha Quadrant, the journey through the bluespace barrier shreds the hull as it passes the threshold.</span>")
 	to_chat(newchar, "<span class='danger'>With the barrier weakened, the station inside the Beta Quadrant is able to yank the failing vessels cryo-storage over to the frontier beacons..</span>")
 	to_chat(newchar, "But it must have prioritized saving life-signs rather than the item storage. You wake up in an unfamilar uniform with a basic backpack. Maybe some of your lightest belongings are in there.")
-	to_chat(newchar, "You find a book at your feet. 'Arrivals to Nexus City'.")
+	to_chat(newchar, "You find a book at your feet. 'Guide to Nexus City'.")
 	to_chat(newchar, "You've been in this situation before, but on a different station. What new stories does the Nexus City hold for you?")
 	to_chat(newchar, "((Thanks for returning to persistence. So many staff and contributors have come together to make the lastest chapter, and I'm really glad to have you back. -- Brawler.))")
 
