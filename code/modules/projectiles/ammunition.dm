@@ -8,6 +8,7 @@
 	slot_flags = SLOT_BELT | SLOT_EARS
 	throwforce = 1
 	w_class = ITEM_SIZE_TINY
+	mass = 8 GRAMS
 
 	var/leaves_residue = 1
 	var/caliber = ""					//Which kind of guns it can be loaded into
@@ -98,13 +99,14 @@
 	icon_state = "357"
 	icon = 'icons/obj/ammo.dmi'
 	obj_flags = OBJ_FLAG_CONDUCTIBLE
-	slot_flags = SLOT_BELT
+	slot_flags = SLOT_BELT | SLOT_POCKET
 	item_state = "syringe_kit"
 	matter = list(MATERIAL_STEEL = 500)
 	throwforce = 5
 	w_class = ITEM_SIZE_SMALL
 	throw_speed = 4
 	throw_range = 10
+	mass = 100 GRAMS
 
 	var/list/stored_ammo = list()
 	var/mag_type = SPEEDLOADER //ammo_magazines can only be used with compatible guns. This is not a bitflag, the load_method var on guns is.
@@ -120,9 +122,6 @@
 	var/list/icon_keys = list()		//keys
 	var/list/ammo_states = list()	//values
 
-/obj/item/ammo_magazine/box
-	w_class = ITEM_SIZE_NORMAL
-
 /obj/item/ammo_magazine/Initialize()
 	. = ..()
 	if(multiple_sprites)
@@ -135,11 +134,11 @@
 		if(initial_ammo)
 			for(var/i in 1 to initial_ammo)
 				stored_ammo += new ammo_type(src)
-	if(caliber)
-		LAZYINSERT(labels, caliber, 1)
-	if(LAZYLEN(labels))
-		SetName("[name] ([english_list(labels, and_text = ", ")])")
-	queue_icon_update()
+		if(caliber)
+			LAZYINSERT(labels, caliber, 1)
+		if(LAZYLEN(labels))
+			SetName("[name] ([english_list(labels, and_text = ", ")])")
+		queue_icon_update()
 
 /obj/item/ammo_magazine/attackby(obj/item/weapon/W as obj, mob/user as mob)
 	if(istype(W, /obj/item/ammo_casing))

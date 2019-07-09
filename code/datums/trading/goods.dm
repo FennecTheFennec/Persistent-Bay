@@ -123,7 +123,6 @@
 	possible_trading_items = list(/obj/item/clothing/under                = TRADER_SUBTYPES_ONLY,
 								/obj/item/clothing/under/acj              = TRADER_BLACKLIST,
 								/obj/item/clothing/under/chameleon        = TRADER_BLACKLIST,
-								/obj/item/clothing/under/cloud            = TRADER_BLACKLIST,
 								/obj/item/clothing/under/color            = TRADER_BLACKLIST,
 								/obj/item/clothing/under/dress            = TRADER_BLACKLIST,
 								/obj/item/clothing/under/ert              = TRADER_BLACKLIST,
@@ -394,7 +393,7 @@ Sells devices, odds and ends, and medical stuff
 				"insult_bad"        = "This is not acceptable, please cease.",
 				)
 
-	possible_wanted_items = list(/obj/item/weapon/ore/ = TRADER_SUBTYPES_ONLY,
+	possible_wanted_items = list(/obj/item/stack/ore/ = TRADER_SUBTYPES_ONLY,
 								/obj/item/weapon/disk/survey = TRADER_THIS_TYPE,
 								/obj/item/stack/ore/slag = TRADER_BLACKLIST)
 

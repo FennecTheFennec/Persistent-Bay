@@ -8,16 +8,10 @@
 	use_power = POWER_USE_ACTIVE
 	idle_power_usage = 10
 	active_power_usage = 2000
+	circuit_type = /obj/item/weapon/circuitboard/seed_extractor
 
 /obj/machinery/seed_extractor/New()
 	..()
-	component_parts = list()
-	component_parts += new /obj/item/weapon/circuitboard/seed_extractor(src)
-	component_parts += new /obj/item/weapon/stock_parts/scanning_module(src)
-	component_parts += new /obj/item/weapon/stock_parts/console_screen(src)
-	component_parts += new /obj/item/weapon/stock_parts/manipulator(src)
-	component_parts += new /obj/item/device/scanner/plant(src)
-	RefreshParts()
 
 obj/machinery/seed_extractor/attackby(var/obj/item/O as obj, var/mob/user as mob)
 
@@ -36,8 +30,8 @@ obj/machinery/seed_extractor/attackby(var/obj/item/O as obj, var/mob/user as mob
 
 		if(new_seed_type)
 			to_chat(user, "<span class='notice'>You extract some seeds from [O].</span>")
-			var/produce = rand(1,4)
-			for(var/i = 0;i<=produce;i++)
+			var/produce = pick(1, 2)
+			for(var/i = 0; i <= produce; i++)
 				var/obj/item/seeds/seeds = new(get_turf(src))
 				seeds.seed_type = new_seed_type.name
 				seeds.update_seed()

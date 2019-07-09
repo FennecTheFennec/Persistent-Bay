@@ -400,7 +400,7 @@
 			chosen_slot = M.save_slot
 			to_chat(src, "<span class='notice'>A character is already in game.</span>")
 			Retrieve_Record(M.real_name)
-			if(GAME_STATE == RUNLEVEL_GAME)
+			if(GAME_STATE >= RUNLEVEL_GAME)
 				panel?.close()
 				load_panel?.close()
 				M.key = key
@@ -472,14 +472,16 @@
 		qdel(src)
 		return
 
+	sleep(50) //Wait possibly for the file to unlock???
 	var/mob/character = SScharacter_setup.load_character(chosen_slot, ckey)
-	if(!character)
-		sleep(100)
 	if(!character)
 		message_admins("[ckey] load character failed during join.")
 		to_chat(src, "Your character is not loading correctly. Contact Brawler.")
+		spawning = FALSE
 		return
-	Retrieve_Record(character.real_name)
+	if (!Retrieve_Record(character.real_name))
+		var/datum/computer_file/report/crew_record/new_record = CreateModularRecord(character)
+		GLOB.all_crew_records |= new_record
 	var/turf/spawnTurf = locate(0,0,0) //Instead of null start with 0,0,0 because the unsafe spawn check will kick in and warn the user if there's something wrong
 
 	if(character.spawn_type == CHARACTER_SPAWN_TYPE_CRYONET)
@@ -495,25 +497,32 @@
 			// The character doesn't have a spawn_loc_2, so use the one for their assignment or the default
 			character.spawn_loc_2 = " default"
 
-		for(var/obj/machinery/cryopod/pod in GLOB.cryopods)
-			if(!pod.loc)
-				qdel(pod)
-				continue
-			if(pod.req_access_faction == character.spawn_loc)
-				if(pod.network == character.spawn_loc_2)
-					spawnTurf = get_turf(pod)
+		if(character.spawn_personal)
+			var/turf/T = locate(character.spawn_p_x,character.spawn_p_y,character.spawn_p_z)
+			if(T)
+				for(var/obj/machinery/cryopod/pod in T.contents)
+					spawnTurf = T
 					break
-				else
+		if(!spawnTurf)
+			for(var/obj/machinery/cryopod/pod in GLOB.cryopods)
+				if(!pod.loc)
+					qdel(pod)
+					continue
+				if(pod.req_access_faction == character.spawn_loc)
+					if(pod.network == character.spawn_loc_2)
+						spawnTurf = get_turf(pod)
+						break
+					else
+						spawnTurf = get_turf(pod)
+				else if(!spawnTurf)
 					spawnTurf = get_turf(pod)
-			else if(!spawnTurf)
-				spawnTurf = get_turf(pod)
 
 		if(!spawnTurf)
 			log_and_message_admins("WARNING! No cryopods avalible for spawning! Get some spawned and connected to the starting factions uid (req_access_faction)")
 			spawnTurf = locate(102, 98, 1)
 
 	else if(character.spawn_type == CHARACTER_SPAWN_TYPE_FRONTIER_BEACON || character.spawn_type == CHARACTER_SPAWN_TYPE_IMPORT)
-		var/obj/item/weapon/card/id/W = character.get_idcard()
+		var/obj/item/weapon/card/id/W = character.GetIdCard()
 		if(W)
 			W.selected_faction = "nexus"
 		var/list/obj/structure/frontier_beacon/possibles = list()

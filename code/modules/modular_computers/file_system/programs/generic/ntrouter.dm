@@ -4,7 +4,7 @@
 	program_icon_state = "comm_monitor"
 	program_menu_icon = "wrench"
 	extended_desc = "This program allows switching between bluespace networks."
-	size = 12
+	size = 1
 	requires_ntnet = FALSE
 	available_on_ntnet = FALSE
 	usage_flags = PROGRAM_ALL
@@ -16,7 +16,7 @@
 
 /datum/nano_module/program/computer_ntrouter/proc/format_networks(var/mob/user)
 	var/list/found_networks = list()
-	var/obj/item/weapon/card/id/id = user.get_idcard()
+	var/obj/item/weapon/card/id/id = user.GetIdCard()
 	for(var/datum/world_faction/fact in GLOB.all_world_factions)
 		if(fact.network)
 			if(!fact.network.invisible || (fact.get_stockholder(user.real_name)) || (id && (core_access_network_linking in id.GetAccess(fact.uid))))

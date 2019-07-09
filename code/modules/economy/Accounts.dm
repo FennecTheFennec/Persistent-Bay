@@ -22,22 +22,11 @@
 /datum/money_account/New()
 	ADD_SAVED_VAR(dupe_fixed)
 	..()
+	
 /datum/money_account/after_load()
-	var/datum/money_account/M = get_account_loadless(account_number)
-	if(M && M.money >= money)
-		message_admins("duplicate account loaded owner: [owner_name] account_number: [M.account_number]")
-		return M
-	else if(M && M.money < money)
-		all_money_accounts.Remove(M)
-		all_money_accounts.Add(src)
-		return src
-	else
-		all_money_accounts.Add(src)
+	all_money_accounts.Add(src)
 	if(money < 0)
 		money = 0
-	if(!dupe_fixed && money > 3000)
-		money = 3000
-		dupe_fixed = 1
 	..()
 	return src
 
@@ -56,7 +45,7 @@
 			connected_business.revenue_objectives(T.amount)
 	else
 		if(istype(connected_business))
-			connected_business.cost_objectives(T.amount)
+			connected_business.cost_objectives(-T.amount)
 	if(T.amount > 0 && nexus_account && nexus_account != src)
 		nexus.pay_tax(src, T.amount)
 

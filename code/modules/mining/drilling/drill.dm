@@ -28,11 +28,33 @@
 	var/need_player_check = 0
 
 	var/datum/world_faction/connected_faction
+	var/saved_faction //We really shouldn't save a copy of a faction
 
+/obj/machinery/mining/New()
+	. = ..()
+	ADD_SAVED_VAR(statu)
+	ADD_SAVED_VAR(active)
+	ADD_SAVED_VAR(cell)
+	ADD_SAVED_VAR(saved_faction)
 
+/obj/machinery/mining/before_save()
+	. = ..()
+	if(connected_faction)
+		saved_faction = connected_faction.uid
+/obj/machinery/mining/after_save()
+	. = ..()
+	saved_faction = null
+
+/obj/machinery/mining/after_load()
+	. = ..()
+	if(saved_faction)
+		connected_faction = get_faction(saved_faction)
+
+/obj/machinery/mining/get_cell()
+	return cell
 
 /obj/machinery/mining/proc/drop_contents()
-
+	return
 
 /obj/machinery/mining/drill/can_connect(var/datum/world_faction/trying, var/mob/M)
 	var/datum/machine_limits/limits = trying.get_limits()
@@ -238,7 +260,7 @@
 	name = "mining drill head"
 	desc = "An enormous drill."
 	icon_state = "mining_drill"
-
+	circuit_type = /obj/item/weapon/circuitboard/miningdrill
 	base_capacity = 200
 
 	var/list/ore_types = list(
@@ -268,20 +290,17 @@
 		MATERIAL_CASSITERITE,
 		MATERIAL_SPHALERITE,
 		MATERIAL_HYDROGEN,
+		MATERIAL_BORON,
+		MATERIAL_ICES_ACETONE,
+		MATERIAL_ICES_AMONIA,
+		MATERIAL_ICES_CARBON_DIOXIDE,
+		MATERIAL_ICES_HYDROGEN,
+		MATERIAL_ICES_METHANE,
+		MATERIAL_ICES_NITROGEN,
+		MATERIAL_ICES_SULFUR_DIOXIDE,
+		MATERIAL_ICES_WATER,
 		)
 
-/obj/machinery/mining/drill/New()
-
-	..()
-
-	component_parts = list()
-	component_parts += new /obj/item/weapon/circuitboard/miningdrill(src)
-	component_parts += new /obj/item/weapon/stock_parts/matter_bin(src)
-	component_parts += new /obj/item/weapon/stock_parts/capacitor(src)
-	component_parts += new /obj/item/weapon/stock_parts/micro_laser(src)
-	component_parts += new /obj/item/weapon/cell/high(src)
-
-	RefreshParts()
 
 /obj/machinery/mining/drill/drop_contents(var/location)
 	for(var/obj/item/stack/ore/O in contents)
@@ -403,7 +422,7 @@
 		need_player_check = 1
 		update_icon()
 
-/obj/machinery/mining/drill/update_icon()
+/obj/machinery/mining/drill/on_update_icon()
 	if(need_player_check)
 		icon_state = "mining_drill_error"
 	else if(active)
@@ -432,13 +451,15 @@
 	name = "mining drill brace"
 	desc = "A machinery brace for an industrial drill. It looks easily two feet thick."
 	icon_state = "mining_brace"
+	circuit_type = /obj/item/weapon/circuitboard/miningdrillbrace
 	var/obj/machinery/mining/drill/connected
 
 /obj/machinery/mining/brace/New()
 	..()
 
-	component_parts = list()
-	component_parts += new /obj/item/weapon/circuitboard/miningdrillbrace(src)
+/obj/machinery/mining/brace/after_load()
+	. = ..()
+	connect()
 
 /obj/machinery/mining/brace/attackby(obj/item/weapon/W as obj, mob/user as mob)
 	if(connected && connected.active)
@@ -468,11 +489,11 @@
 /obj/machinery/mining/brace/proc/connect()
 
 	var/turf/T = get_step(get_turf(src), src.dir)
-
-	for(var/thing in T.contents)
-		if(istype(thing, /obj/machinery/mining/))
-			connected = thing
-			break
+	if(T)
+		for(var/thing in T.contents)
+			if(istype(thing, /obj/machinery/mining/))
+				connected = thing
+				break
 
 	if(!connected)
 		return

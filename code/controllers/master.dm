@@ -184,16 +184,6 @@ GLOBAL_REAL(Master, /datum/controller/master) = new
 	var/time = (REALTIMEOFDAY - start_timeofday) / 10
 
 	var/msg = "Initializations complete within [time] second\s!"
-	for(var/datum/world_faction/business/faction in GLOB.all_world_factions)
-		var/total_stocks = 0
-			for(var/x in faction.stock_holders)
-				var/datum/stockholder/holder = connected_faction.stock_holders[x]
-				total_stocks += holder.stocks
-				
-			if(total_stocks > 100)
-				message_admins("[faction.name] has over 100 STOCKS. investigate and correct the issue.")
-		
-		
 	report_progress(msg)
 	log_world(msg)
 
@@ -223,11 +213,11 @@ GLOBAL_REAL(Master, /datum/controller/master) = new
 	for(var/mob/new_player/player in GLOB.player_list)
 		if(player.panel)
 			player.panel.close()
-			player.new_player_panel()
-			if(player && player.ready && player.mind)
-				player.loadCharacter()
-			else
-				message_admins("skipping player [player], [player.ready], [player.mind]")
+		player.new_player_panel()
+		if(player && player.ready && player.mind)
+			player.loadCharacter()
+		else
+			message_admins("skipping player [player], [player.ready], [player.mind]")
 
 	callHook("roundstart")
 
@@ -236,7 +226,7 @@ GLOBAL_REAL(Master, /datum/controller/master) = new
 	if(isnull(old_runlevel))
 		old_runlevel = "NULL"
 
-	current_runlevel = log(2, new_runlevel) + 1
+	current_runlevel = new_runlevel
 	report_progress("MC: Runlevel changed from [old_runlevel] to [current_runlevel]")
 	if(current_runlevel < 1)
 		CRASH("Attempted to set invalid runlevel: [new_runlevel]")

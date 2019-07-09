@@ -1,4 +1,4 @@
-GLOBAL_LIST_EMPTY(all_world_factions)
+GLOBAL_RAW(/list/datum/world_faction/all_world_factions);GLOBAL_UNMANAGED(all_world_factions, null); //Don't init as empty list, because it happens too late during init
 GLOBAL_LIST_EMPTY(all_business)
 
 GLOBAL_LIST_EMPTY(recent_articles)
@@ -33,6 +33,10 @@ var/PriorityQueue/all_feeds
 			contract.update_icon()
 			return 0
 		if(contract.finalize())
+			var/datum/computer_file/report/crew_record/Rec = Retrieve_Record(contract.created_by)
+			if(Rec && Rec.linked_account)
+				var/datum/transaction/T = new("Stock Contract", "Stock Contract", contract.required_cash, "Stock Contract")
+				Rec.linked_account.do_transaction(T)
 			var/datum/stockholder/newholder
 			newholder = connected_faction.get_stockholder_datum(contract.signed_by)
 			if(!newholder)
@@ -43,7 +47,7 @@ var/PriorityQueue/all_feeds
 			holder.stocks -= contract.ownership
 			if(!holder.stocks)
 				connected_faction.stock_holders -= holder.real_name
-
+			return 1
 /obj/item/weapon/paper/contract/recurring
 	var/sign_type = CONTRACT_BUSINESS
 	var/contract_payee = ""
@@ -70,7 +74,7 @@ var/PriorityQueue/all_feeds
 		can_read = get_dist(src, AI.camera) < 2
 	var/info2 = info
 	if(sign_type == CONTRACT_PERSON)
-		if(cancelled || !linked)
+		if(cancelled)
 			info2 += "<br>This contract has been cancelled. This can be shredded."
 		else if(approved)
 			info2 += "<br>This contract has been finalized. This is just for record keeping."
@@ -102,7 +106,7 @@ var/PriorityQueue/all_feeds
 	if(href_list["pay"])
 		if(signed) return
 		if(sign_type == CONTRACT_BUSINESS)
-			var/obj/item/weapon/card/id/id = usr.get_idcard()
+			var/obj/item/weapon/card/id/id = usr.GetIdCard()
 			if(id)
 				if(id.selected_faction == contract_payee)
 					to_chat(usr, "An organization cannot sign its own contract.")
@@ -127,8 +131,10 @@ var/PriorityQueue/all_feeds
 
 							GLOB.contract_database.add_contract(new_contract)
 							signed = 1
+							approved = 1
 							info = replacetext(info, "*Unsigned*", "[connected_faction.uid]")
 							signed_by = usr.real_name
+							update_icon()
 						else
 							to_chat(usr, "Insufficent funds to sign contract.")
 							return
@@ -166,9 +172,8 @@ var/PriorityQueue/all_feeds
 			else
 				to_chat(usr, "Insufficent funds to sign contract.")
 				return
-
-	..()
-
+	else
+		..()
 
 
 
@@ -210,6 +215,7 @@ var/PriorityQueue/all_feeds
 		icon_state = "contract-pending"
 	else
 		icon_state = "contract"
+
 /obj/item/weapon/paper/contract/show_content(mob/user, forceshow)
 	var/can_read = (istype(user, /mob/living/carbon/human) || isghost(user) || istype(user, /mob/living/silicon)) || forceshow
 	if(!forceshow && istype(user,/mob/living/silicon/ai))
@@ -379,6 +385,8 @@ var/PriorityQueue/all_feeds
 /datum/NewsStory/proc/allowed(var/real_name)
 	if(real_name in purchased)
 		return 1
+	if(!cost)
+		return 1
 	return 0
 
 
@@ -454,9 +462,9 @@ var/PriorityQueue/all_feeds
 	story.parent = current_issue
 	if(story.announce)
 		for(var/obj/machinery/newscaster/caster in allCasters)
-			caster.newsAlert("(From [name]) [announcement] ([story.name])")
+			caster.newsAlert("(From [name]) [announcement] ([story.name])")			
 	GLOB.recent_articles |= story
-
+	GLOB.discord_api.broadcast("(From [name]) [announcement] ([story.name])")		
 
 /datum/LibraryDatabase
 	var/list/books = list()
@@ -738,7 +746,7 @@ var/PriorityQueue/all_feeds
 	if(password)
 		var/datum/world_faction/found_faction
 		for(var/datum/world_faction/fac in GLOB.all_world_factions)
-			if(fac.uid == name)
+			if(fac && fac.uid == name)
 				found_faction = fac
 				break
 		if(!found_faction) return
@@ -746,7 +754,7 @@ var/PriorityQueue/all_feeds
 		return found_faction
 	var/datum/world_faction/found_faction
 	for(var/datum/world_faction/fac in GLOB.all_world_factions)
-		if(fac.uid == name)
+		if(fac && fac.uid == name)
 			found_faction = fac
 			break
 	return found_faction
@@ -934,7 +942,7 @@ var/PriorityQueue/all_feeds
 	nexus.network.password = ""
 	nexus.network.invisible = 0
 
-	GLOB.all_world_factions |= nexus
+	LAZYDISTINCTADD(GLOB.all_world_factions, nexus)
 
 
 /datum/world_faction/democratic/New()
@@ -1218,10 +1226,21 @@ var/PriorityQueue/all_feeds
 	votes -= vote
 
 /datum/world_faction/democratic/proc/defeat_vote(var/datum/council_vote/vote)
+	var/subject = "Law Defeated ([vote.name])"
+	var/body = "A law has been defeated on [stationtime2text()], [stationdate2text()]."
+	notify_council(subject,body)
 	votes -= vote
 
 /datum/world_faction/democratic/proc/start_vote(var/datum/council_vote/vote)
+	var/subject = "New Law Proposal ([vote.name])"
+	var/body = "A new law has been proposed on [stationtime2text()], [stationdate2text()] by [vote.sponsor]. Please view it as soon as possible."
+	notify_council(subject,body)
 	votes |= vote
+
+/datum/world_faction/democratic/proc/notify_council(var/subject, var/body)
+	for(var/datum/democracy/councillor in city_council)
+		Send_Email(councillor.real_name, "Nexus City Government", subject, body)
+	Send_Email(gov.real_name, "Nexus City Government", subject, body)
 
 /datum/world_faction/democratic/proc/has_vote(var/real_name)
 	for(var/datum/council_vote/vote in votes)
@@ -1243,22 +1262,26 @@ var/PriorityQueue/all_feeds
 /datum/world_faction/democratic/proc/repeal_policy(var/datum/council_vote/vote)
 	policy -= vote
 	command_announcement.Announce("Governor [vote.signer] has repealed an executive policy! [vote.name].","Governor Action")
-
+	GLOB.discord_api.broadcast("Governor [vote.signer] has repealed an executive policy! [vote.name].")
 /datum/world_faction/democratic/proc/pass_policy(var/datum/council_vote/vote)
 	policy |= vote
 	command_announcement.Announce("Governor [vote.signer] has passed an executive policy! [vote.name].","Governor Action")
-
+	GLOB.discord_api.broadcast("Governor [vote.signer] has passed an executive policy! [vote.name].")
+	
 /datum/world_faction/democratic/proc/pass_nomination_judge(var/datum/democracy/judge)
 	judges |= judge
 	command_announcement.Announce("The government has approved the nomination of [judge.real_name] for judge. They are now Judge [judge.real_name].","Nomination Pass")
-
+	GLOB.discord_api.broadcast("The government has approved the nomination of [judge.real_name] for judge. They are now Judge [judge.real_name].")
 /datum/world_faction/democratic/proc/pass_impeachment_judge(var/datum/democracy/judge)
 	judges -= judge
-	command_announcement.Announce("The government has voted to remove [judge.real_name] from their position of  judge.","Impeachment")
-
+	command_announcement.Announce("The government has voted to remove [judge.real_name] from their position of judge.","Impeachment")
+	GLOB.discord_api.broadcast("The government has voted to remove [judge.real_name] from their position of judge.")
 /datum/world_faction/democratic/proc/pass_vote(var/datum/council_vote/vote)
 	votes -= vote
 	vote.time_signed = world.realtime
+	var/subject = "Law passed ([vote.name])"
+	var/body = "A law has been passed on [stationtime2text()], [stationdate2text()]."
+	notify_council(subject,body)
 	if(vote.bill_type == 3)
 		if(vote.tax == 2)
 			if(vote.taxtype == 2)
@@ -1272,10 +1295,12 @@ var/PriorityQueue/all_feeds
 				tax_bprog4_amount = vote.progamount4
 				tax_type_b = 2
 				command_announcement.Announce("The government has just passed a new progressive tax policy for business income.","Business Tax")
+				GLOB.discord_api.broadcast("The government has just passed a new progressive tax policy for business income.")
 			else
 				tax_bflat_rate = vote.flatrate
 				tax_type_b = 1
 				command_announcement.Announce("The government has just passed a new flat tax policy for business income.","Business Tax")
+				GLOB.discord_api.broadcast("The government has just passed a new flat tax policy for business income.")
 		else
 			if(vote.taxtype == 2)
 				tax_pprog1_rate = vote.prograte1
@@ -1288,10 +1313,12 @@ var/PriorityQueue/all_feeds
 				tax_pprog4_amount = vote.progamount4
 				tax_type_p = 2
 				command_announcement.Announce("The government has just passed a new progressive tax policy for personal income.","Personal Income Tax")
+				GLOB.discord_api.broadcast("The government has just passed a new progressive tax policy for personal income.")
 			else
 				tax_pflat_rate = vote.flatrate
 				tax_type_p = 1
 				command_announcement.Announce("The government has just passed a new flat tax policy for personal income.","Personal Income Tax")
+				GLOB.discord_api.broadcast("The government has just passed a new flat tax policy for personal income.")
 	else if(vote.bill_type == 4)
 		for(var/datum/democracy/judge in judges)
 			if(judge.real_name == vote.impeaching)
@@ -1307,12 +1334,13 @@ var/PriorityQueue/all_feeds
 
 	else if(vote.bill_type == 1)
 		criminal_laws |= vote
-		command_announcement.Announce("The government has just passed a new criminal law.","New Criminal Law")
+		command_announcement.Announce("The government has just passed a new criminal law. [vote.name]","New Criminal Law")
+		GLOB.discord_api.broadcast("The government has just passed a new criminal law. [vote.name]")
 
 	else if(vote.bill_type == 2)
 		civil_laws |= vote
-		command_announcement.Announce("The government has just passed a new civil law.","New Civil Law")
-
+		command_announcement.Announce("The government has just passed a new civil law. [vote.name]","New Civil Law")
+		GLOB.discord_api.broadcast("The government has just passed a new civil law. [vote.name]")
 
 /datum/council_vote
 	var/name = "" // title of votes
@@ -1468,7 +1496,7 @@ var/PriorityQueue/all_feeds
 
 	limits.limit_shuttles = 3
 
-	limits.limit_area = 100000
+	limits.limit_area = 200000
 
 	limits.limit_tcomms = 5
 
@@ -1718,13 +1746,13 @@ var/PriorityQueue/all_feeds
 	if(holder)
 		if(stock_holders.len == 1) // last stock holder
 			stock_holders.Cut()
-			GLOB.all_world_factions -= src
+			LAZYREMOVE(GLOB.all_world_factions, src)
 			qdel(src)
 			return
 		else
 			var/remainder = holder.stocks % (stock_holders.len-1)
 			var/division = (holder.stocks-remainder)/(stock_holders.len-1)
-			stock_holders -= holder
+			stock_holders -= real_name
 			for(var/datum/stockholder/secondholder in stock_holders)
 				secondholder.stocks += division
 			if(remainder)
@@ -1893,6 +1921,7 @@ var/PriorityQueue/all_feeds
 	possible |= module.spec.hourly_objectives
 	var/chose_type = pick(possible)
 	hourly_objective = new chose_type()
+	hourly_objective.parent = src
 	hourly_assigned = world.realtime
 /datum/world_faction/business/proc/assign_daily_objective()
 	var/list/possible = list()
@@ -1900,6 +1929,7 @@ var/PriorityQueue/all_feeds
 	possible |= module.spec.daily_objectives
 	var/chose_type = pick(possible)
 	daily_objective = new chose_type()
+	daily_objective.parent = src
 	daily_assigned = world.realtime
 /datum/world_faction/business/proc/assign_weekly_objective()
 	var/list/possible = list()
@@ -1907,6 +1937,7 @@ var/PriorityQueue/all_feeds
 	possible |= module.spec.weekly_objectives
 	var/chose_type = pick(possible)
 	weekly_objective = new chose_type()
+	weekly_objective.parent = new chose_type()
 	weekly_assigned = world.realtime
 
 /datum/world_faction/business/New()
@@ -2136,7 +2167,12 @@ var/PriorityQueue/all_feeds
 			var/datum/accesses/access = new()
 			access.name = "CEO"
 			access.pay = 45
-
+			access.expense_limit = 10000000
+			CEO.accesses |= access
+		else
+			var/datum/accesses/access = CEO.accesses[1]
+			access.expense_limit = 10000000
+	..()
 /datum/world_faction/proc/get_limits()
 	return limits
 
@@ -2458,13 +2494,9 @@ var/PriorityQueue/all_feeds
 //Otherwise, when globabl variables are initialized, the all_world_faction list may or may not be overwritten on startup, when not loading a save.
 /obj/faction_spawner/Initialize()
 	..()
-	return INITIALIZE_HINT_LATELOAD
-
-/obj/faction_spawner/LateInitialize()
 	for(var/datum/world_faction/existing_faction in GLOB.all_world_factions)
 		if(existing_faction.uid == uid)
-			qdel(src)
-			return
+			return INITIALIZE_HINT_QDEL
 	var/datum/world_faction/fact = new()
 	fact.name = name
 	fact.abbreviation = name_short
@@ -2479,17 +2511,16 @@ var/PriorityQueue/all_feeds
 	fact.network.invisible = network_invisible
 	fact.starter_outfit = starter_outfit
 	LAZYDISTINCTADD(GLOB.all_world_factions, fact)
-	qdel(src)
-	return
+	return INITIALIZE_HINT_QDEL
 
 /obj/faction_spawner/democratic
 	var/purpose = ""
 
-/obj/faction_spawner/democratic/LateInitialize()
+/obj/faction_spawner/democratic/Initialize()
+	..()
 	for(var/datum/world_faction/existing_faction in GLOB.all_world_factions)
 		if(existing_faction.uid == uid)
-			qdel(src)
-			return
+			return INITIALIZE_HINT_QDEL
 	var/datum/world_faction/democratic/fact = new()
 	fact.name = name
 	fact.abbreviation = name_short
@@ -2505,8 +2536,7 @@ var/PriorityQueue/all_feeds
 	fact.network.invisible = network_invisible
 	fact.starter_outfit = starter_outfit
 	LAZYDISTINCTADD(GLOB.all_world_factions, fact)
-	qdel(src)
-	return
+	return INITIALIZE_HINT_QDEL
 
 
 
@@ -2533,6 +2563,7 @@ var/PriorityQueue/all_feeds
 		if(parent)
 			var/datum/transaction/Te = new("Completed Objective", "Nexus Economic Stimulus", payout, "Nexus Economic Module")
 			parent.central_account.do_transaction(Te)
+			parent.research.points += research_payout
 		return 1
 
 /datum/module_objective/proc/get_status()
@@ -2878,7 +2909,7 @@ var/PriorityQueue/all_feeds
 	limit_drills = 5
 	limit_botany = 10
 	limit_shuttles = 10
-	limit_area = 100000
+	limit_area = 200000 //size of the nexus at most 3z levels of 255x255
 	limit_tcomms = 5
 	limit_tech_general = 4
 	limit_tech_engi = 4
@@ -3295,7 +3326,7 @@ var/PriorityQueue/all_feeds
 		levels |= new x()
 
 /datum/business_module/engineering
-	cost = 800
+	cost = 1400
 	name = "Engineering"
 	desc = "An engineering business has tools to develop areas of the station and construct shuttles plus the unique capacity to manage private radio communications. Engineering businesses can reserve larger spaces than other businesses and develop those into residential areas to be leased to individuals."
 	levels = list(/datum/machine_limits/eng/one, /datum/machine_limits/eng/two, /datum/machine_limits/eng/three, /datum/machine_limits/eng/four)
@@ -3317,7 +3348,7 @@ var/PriorityQueue/all_feeds
 
 
 /datum/business_module/medical
-	cost = 700
+	cost = 1200
 	name = "Medical"
 	desc = "A medical firm has unqiue capacity to develop medications and implants. Programs can be used to register clients under your care and recieve a weekly insurance payment from them, in exchange for tracking their health and responding to medical emergencies."
 	specs = list(/datum/business_spec/medical/pharma, /datum/business_spec/medical/paramedic)
@@ -3342,13 +3373,13 @@ var/PriorityQueue/all_feeds
 
 
 /datum/business_module/retail
-	cost = 700
+	cost = 1200
 	name = "Retail"
 	desc = "A retail business has exclusive production capacity so that they can sell clothing and furniture to individuals and organizations. With additional specialization they can branch out into combat equipment or engineering supplies, but they are reliant on the material market to supply their production."
 	levels = list(/datum/machine_limits/retail/one, /datum/machine_limits/retail/two, /datum/machine_limits/retail/three, /datum/machine_limits/retail/four)
 	specs = list(/datum/business_spec/retail/combat, /datum/business_spec/retail/bigstore)
-	hourly_objectives = list(/datum/module_objective/hourly/visitors, /datum/module_objective/hourly/employees, /datum/module_objective/hourly/cost, /datum/module_objective/hourly/sales, /datum/module_objective/weekly/fabricate, /datum/module_objective/hourly/revenue)
-	daily_objectives = list(/datum/module_objective/daily/visitors, /datum/module_objective/daily/employees, /datum/module_objective/daily/cost, /datum/module_objective/daily/sales, /datum/module_objective/weekly/fabricate, /datum/module_objective/daily/revenue)
+	hourly_objectives = list(/datum/module_objective/hourly/visitors, /datum/module_objective/hourly/employees, /datum/module_objective/hourly/cost, /datum/module_objective/hourly/sales, /datum/module_objective/hourly/fabricate, /datum/module_objective/hourly/revenue)
+	daily_objectives = list(/datum/module_objective/daily/visitors, /datum/module_objective/daily/employees, /datum/module_objective/daily/cost, /datum/module_objective/daily/sales, /datum/module_objective/daily/fabricate, /datum/module_objective/daily/revenue)
 	weekly_objectives = list(/datum/module_objective/weekly/visitors, /datum/module_objective/weekly/employees, /datum/module_objective/weekly/cost, /datum/module_objective/weekly/sales, /datum/module_objective/weekly/fabricate, /datum/module_objective/weekly/revenue)
 	starting_items = list(/obj/item/weapon/storage/toolbox/mechanical/filled = 1, /obj/item/stack/cable_coil/thirty = 1, /obj/item/weapon/stock_parts/matter_bin = 3, /obj/item/weapon/stock_parts/micro_laser = 4, /obj/item/weapon/stock_parts/console_screen = 1, /obj/item/modular_computer/pda = 1, /obj/item/weapon/circuitboard/fabricator/genfab = 1, /obj/item/weapon/circuitboard/telepad = 1, /obj/item/stack/material/steel/ten = 4, /obj/item/stack/material/glass/ten = 4)
 
@@ -3365,7 +3396,7 @@ var/PriorityQueue/all_feeds
 
 
 /datum/business_module/service
-	cost = 700
+	cost = 1100
 	name = "Service"
 	desc = "A service business has a fabricator that can produce culinary and botany equipment. A service business can serve food or drink and supply freshly grown plants for other organizations, a crucial source of cloth and biomass."
 	levels = list(/datum/machine_limits/service/one, /datum/machine_limits/service/two, /datum/machine_limits/service/three, /datum/machine_limits/service/four)
@@ -3391,7 +3422,7 @@ var/PriorityQueue/all_feeds
 
 
 /datum/business_module/mining
-	cost = 800
+	cost = 1400
 	name = "Mining"
 	desc = "Mining companies send teams out into the hostile outer-space armed with picks, drills and a variety of other EVA equipment plus weapons and armor to defend themselves. The ores they recover can be processed and then sold on the Material Marketplace to other organizations for massive profits."
 	levels = list(/datum/machine_limits/mining/one, /datum/machine_limits/mining/two, /datum/machine_limits/mining/three, /datum/machine_limits/mining/four)
@@ -3411,13 +3442,13 @@ var/PriorityQueue/all_feeds
 /datum/business_spec/mining/monsterhunter
 	name = "Monster Hunter"
 	desc = "This specialization gives the business capacity for a medical fabricator and tech that can produce machines and equipment to keep employees alive while fighting the top tier of monsters. Travel to the outer reaches and dig for riches, let the monsters come to you."
-	limits = /datum/machine_limits/retail/spec/bigstore
+	limits = /datum/machine_limits/mining/spec/monsterhunter
 	hourly_objectives = list(/datum/module_objective/hourly/monsters)
 	daily_objectives = list(/datum/module_objective/daily/monsters)
 	weekly_objectives = list(/datum/module_objective/weekly/monsters)
 
 /datum/business_module/media
-	cost = 600
+	cost = 1100
 	name = "Media"
 	desc = "Media companies have simple production and tech capacities but exclusive access to programs that can publish books and news articles for paid redistribution. It is also much less expensive than other types, making it a good choice for generic business."
 	levels = list(/datum/machine_limits/media/one, /datum/machine_limits/media/two, /datum/machine_limits/media/three, /datum/machine_limits/media/four)

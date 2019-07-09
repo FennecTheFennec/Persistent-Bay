@@ -355,6 +355,8 @@
 		update_icon(0)
 
 /obj/machinery/light/proc/set_emergency_lighting(var/enable)
+	if(!lightbulb)
+		return 0
 	if(enable)
 		if(LIGHTMODE_EMERGENCY in lightbulb.lighting_modes)
 			set_mode(LIGHTMODE_EMERGENCY)
@@ -453,7 +455,7 @@
 	else if(!lightbulb)
 		if(isScrewdriver(W)) //If it's a screwdriver open it.
 			playsound(src.loc, 'sound/items/Screwdriver.ogg', 75, 1)
-			var/obj/item/weapon/tool/T
+			var/obj/item/weapon/tool/T = W
 			if(T.use_tool(user, src, 1 SECOND))
 				user.visible_message("[user.name] opens [src]'s casing.", "You open [src]'s casing.", "You hear a noise.")
 				dismantle()

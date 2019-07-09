@@ -41,6 +41,7 @@ var/list/floor_decals = list()
 		if(!T.decals) T.decals = list()
 		T.decals |= floor_decals[cache_key]
 		T.overlays |= floor_decals[cache_key]
+	loc = null
 	atom_flags |= ATOM_FLAG_INITIALIZED
 	return INITIALIZE_HINT_QDEL
 
@@ -786,6 +787,12 @@ var/list/floor_decals = list()
 /obj/effect/floor_decal/spline/fancy
 	name = "spline - fancy"
 	icon_state = "spline_fancy"
+
+/obj/effect/floor_decal/spline/fancy/black
+	color = COLOR_GRAY
+
+/obj/effect/floor_decal/spline/fancy/black/corner
+	icon_state = "spline_fancy_corner"
 
 /obj/effect/floor_decal/spline/fancy/wood
 	name = "spline - wood"

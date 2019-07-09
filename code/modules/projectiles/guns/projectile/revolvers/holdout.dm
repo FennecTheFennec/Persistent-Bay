@@ -6,7 +6,10 @@
 	caliber = CALIBER_22LR
 	ammo_type = /obj/item/ammo_casing/c22lr
 	w_class = ITEM_SIZE_SMALL
+	slot_flags = SLOT_BELT | SLOT_HOLSTER | SLOT_POCKET
 	accuracy = 3
 	one_hand_penalty = 0
 	bulk = 0
 	fire_delay = 5 //Gotta compensate for its weakness
+	matter = list(MATERIAL_STEEL = 1500, MATERIAL_ALUMINIUM = 200)
+	mass = 550 GRAMS

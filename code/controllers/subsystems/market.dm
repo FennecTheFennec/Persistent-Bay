@@ -46,7 +46,7 @@ SUBSYSTEM_DEF(market)
 					if((faction.weekly_assigned + 7 DAY) < world.realtime)
 						faction.assign_weekly_objective()
 			else
-				if((faction.daily_assigned + 7 DAYS) < world.realtime)
+				if((faction.weekly_assigned + 7 DAYS) < world.realtime)
 					faction.assign_weekly_objective()
 
 
@@ -72,17 +72,25 @@ SUBSYSTEM_DEF(market)
 	return ""
 
 /datum/contract_database
-	var/list/all_contracts
+	var/list/all_contracts = list()
+	
+/datum/contract_database/after_load()
+	if(!islist(all_contracts))
+		all_contracts = list()
 
 /datum/contract_database/proc/add_contract(var/datum/recurring_contract/contract)
 	var/datum/world_faction/business/faction = get_faction(contract.payee)
-	if(istype(faction))
-		faction.contract_objectives(contract.payer, contract.payer_type)
 	if(contract.auto_pay)
 		if(contract.handle_payment())
 			contract.add_services()
 			all_contracts |= contract
-
+			if(istype(faction))
+				faction.contract_objectives(contract.payer, contract.payer_type)
+	else
+		contract.add_services()
+		all_contracts |= contract
+		if(istype(faction))
+			faction.contract_objectives(contract.payer, contract.payer_type)
 /datum/contract_database/proc/get_contracts(var/uid, var/typee)
 	var/list/contracts = list()
 	for(var/datum/recurring_contract/contract in all_contracts)
@@ -141,7 +149,7 @@ SUBSYSTEM_DEF(market)
 			if(R)
 				payee_account = R.linked_account
 		if(payee_account)
-			if(payee_account.money >= pay_amount)
+			if(payer_account.money >= pay_amount)
 				var/datum/transaction/T = new("[payee] (via recurring contract)", "Contract Payment", -pay_amount, "Recurring Contract")
 				payer_account.do_transaction(T)
 				//transfer the money

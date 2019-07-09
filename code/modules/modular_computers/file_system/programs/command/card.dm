@@ -10,6 +10,7 @@
 	requires_ntnet = TRUE
 	size = 8
 	category = PROG_COMMAND
+	usage_flags = PROGRAM_CONSOLE | PROGRAM_LAPTOP | PROGRAM_TELESCREEN
 	
 /datum/computer_file/program/card_mod/can_run(var/mob/living/user, var/loud = 0, var/access_to_check, var/alt_computer)
 	// Defaults to required_access
@@ -145,7 +146,7 @@
 			if(!record.rank || record.rank > assignment.accesses.len)
 				use_rank = assignment.accesses.len
 			if(!use_rank)
-				message_admins("Broken assignment [assignment] held by [record.get_name()]")
+				message_admins("Broken assignment [assignment.uid] held by [record.get_name()]")
 			var/datum/accesses/expenses = assignment.accesses[use_rank]
 			if(expenses)
 				expense_limit = expenses.expense_limit

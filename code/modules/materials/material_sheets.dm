@@ -12,14 +12,20 @@
 	randpixel = 3
 	icon = 'icons/obj/materials.dmi'
 
+	stacktype = /obj/item/stack/material
+
 	var/default_type = MATERIAL_STEEL
 	var/material/material
 	var/default_reinf_type
 	var/material/reinf_material
-	var/perunit = SHEET_MATERIAL_AMOUNT
 	var/material_flags = USE_MATERIAL_COLOR|USE_MATERIAL_SINGULAR_NAME|USE_MATERIAL_PLURAL_NAME
 	var/plural_name
 	var/matter_multiplier = 1
+
+/obj/item/stack/material/New(loc, amount)
+	. = ..()
+	ADD_SAVED_VAR(material)
+	ADD_SAVED_VAR(reinf_material)
 
 /obj/item/stack/material/Initialize(mapload, var/amount, var/material, var/reinf_material)
 	. = ..()
@@ -40,8 +46,6 @@
 		if(!src.reinf_material)
 			log_warning(" /obj/item/stack/material/Initialize() : Missing or invalid reinf_material type([src.default_reinf_type])!")
 
-	if(!stacktype)
-		stacktype = src.material.stack_type
 	if(islist(src.material.stack_origin_tech))
 		origin_tech = src.material.stack_origin_tech.Copy()
 
@@ -52,20 +56,16 @@
 
 	//testing("Initialized [src] \ref[src], [src.default_type] - ([src.material]), [src.default_reinf_type] - ([src.reinf_material])")
 	update_strings()
-	update_icon()
+	queue_icon_update()
 
 /obj/item/stack/material/list_recipes(mob/user, recipes_sublist)
 	if(!material)
 		return
 	recipes = material.get_recipes(reinf_material && reinf_material.name)
-	..() 
+	..()
 
 /obj/item/stack/material/get_codex_value()
 	return (material && !material.hidden_from_codex) ? "[lowertext(material.display_name)] (material)" : ..()
-
-/obj/item/stack/material/set_amount(var/_amount)
-	amount = max(1, min(_amount, max_amount))
-	update_strings()
 
 /obj/item/stack/material/get_material()
 	return material
@@ -86,7 +86,7 @@
 
 	if(material_flags & USE_MATERIAL_PLURAL_NAME)
 		plural_name = material.sheet_plural_name
-	
+
 	if(amount>1)
 		SetName("[material.use_name] [plural_name]")
 		desc = "A stack of [material.use_name] [plural_name]."
@@ -105,7 +105,7 @@
 	return
 
 /obj/item/stack/material/proc/is_same(obj/item/stack/material/M)
-	if(!istype(M))
+	if((stacktype != M.stacktype))
 		return FALSE
 	if(matter_multiplier != M.matter_multiplier)
 		return FALSE
@@ -169,14 +169,18 @@
 //--------------------------------
 //	Generic
 //--------------------------------
-/obj/item/stack/material/generic
-	icon_state = "sheet"
-	plural_icon_state = "sheet-mult"
-	max_icon_state = "sheet-max"
+///obj/item/stack/material/generic
+	// icon_state = "sheet"
+	// plural_icon_state = "sheet-mult"
+	// max_icon_state = "sheet-max"
 
 /obj/item/stack/material/generic/Initialize()
 	. = ..()
-	if(material) color = material.icon_colour
+	// if(material) color = material.icon_colour
+	//This should make any existing stacks of generic material on the save turn into regular old material stacks
+	if(material && loc)
+		material.place_sheet(get_turf(src), amount)
+	return INITIALIZE_HINT_QDEL
 
 //--------------------------------
 //	Iron
@@ -510,6 +514,22 @@
 	amount = 50
 
 //--------------------------------
+//	Graphene
+//--------------------------------
+/obj/item/stack/material/graphene
+	name = "graphene sheet"
+	icon_state = "brick"
+	plural_icon_state = "brick-mult"
+	max_icon_state = "brick-max"
+	default_type = MATERIAL_GRAPHENE
+
+/obj/item/stack/material/graphene/ten
+	amount = 10
+
+/obj/item/stack/material/graphene/fifty
+	amount = 50
+
+//--------------------------------
 //	Diamond
 //--------------------------------
 /obj/item/stack/material/diamond
@@ -649,7 +669,7 @@
 	default_type = MATERIAL_GLASS
 
 /obj/item/stack/material/glass/on_update_icon()
-	if(reinf_material) 
+	if(reinf_material)
 		icon_state = "sheet-glass-reinf"
 		base_state = icon_state
 		plural_icon_state = "sheet-glass-reinf-mult"

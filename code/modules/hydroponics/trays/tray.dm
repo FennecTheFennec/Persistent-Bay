@@ -146,18 +146,23 @@
 	ADD_SAVED_VAR(mutation_level)
 	ADD_SAVED_VAR(tray_light)
 	ADD_SAVED_VAR(plant_health)
-	ADD_SAVED_VAR(lastproduce)
-	ADD_SAVED_VAR(lastcycle)
-	ADD_SAVED_VAR(cycledelay)
+
 	ADD_SAVED_VAR(closed_system)
-	ADD_SAVED_VAR(force_update)
+
 	ADD_SAVED_VAR(temp_chem_holder)
 	ADD_SAVED_VAR(labelled)
 	ADD_SAVED_VAR(seed)
-	ADD_SAVED_VAR(connected_faction)
+	ADD_SAVED_VAR(req_access_faction)
+
+/obj/machinery/portable_atmospherics/hydroponics/before_save()
+	. = ..()
+	if(connected_faction)
+		req_access_faction = connected_faction.uid
 
 /obj/machinery/portable_atmospherics/hydroponics/after_load()
 	..()
+	if(req_access_faction)
+		connected_faction = get_faction(req_access_faction)
 	queue_icon_update()
 
 /obj/machinery/portable_atmospherics/hydroponics/AltClick()
@@ -198,21 +203,22 @@
 	connected_faction = null
 	if(M) to_chat(M, "The machine has been disconnected.")
 
-
-
 /obj/machinery/portable_atmospherics/hydroponics/Initialize()
 	. = ..()
-	if(!temp_chem_holder)
-		temp_chem_holder = new()
-		temp_chem_holder.create_reagents(100)
-	temp_chem_holder.atom_flags |= ATOM_FLAG_OPEN_CONTAINER
-	if (!reagents) create_reagents(200)
 	if(mechanical)
 		connect()
 	queue_icon_update()
 	STOP_PROCESSING(SSmachines, src)
 	START_PROCESSING(SSplants, src)
 	return INITIALIZE_HINT_LATELOAD
+
+/obj/machinery/portable_atmospherics/hydroponics/SetupReagents()
+	. = ..()
+	if(!temp_chem_holder)
+		temp_chem_holder = new()
+		temp_chem_holder.create_reagents(100)
+		temp_chem_holder.atom_flags |= ATOM_FLAG_OPEN_CONTAINER
+	if (!reagents) create_reagents(200)
 
 /obj/machinery/portable_atmospherics/hydroponics/Destroy()
 	STOP_PROCESSING(SSplants, src)
@@ -230,14 +236,6 @@
 		return
 
 	//Override for somatoray projectiles.
-	if(istype(Proj ,/obj/item/projectile/energy/floramut)&& prob(20))
-		if(istype(Proj, /obj/item/projectile/energy/floramut/gene))
-			var/obj/item/projectile/energy/floramut/gene/G = Proj
-			if(seed)
-				seed = seed.diverge_mutate_gene(G.gene, get_turf(loc))	//get_turf just in case it's not in a turf.
-		else
-			mutate(1)
-			return
 	else if(istype(Proj ,/obj/item/projectile/energy/florayield) && prob(20))
 		yield_mod = min(10,yield_mod+rand(1,2))
 		return
@@ -386,7 +384,9 @@
 	return
 
 /obj/machinery/portable_atmospherics/hydroponics/proc/mutate(var/severity)
-
+	severity = 0
+	return
+	/*
 	// No seed, no mutations.
 	if(!seed)
 		return
@@ -404,7 +404,7 @@
 	seed.mutate(severity,get_turf(src))
 
 	return
-
+	*/
 /obj/machinery/portable_atmospherics/hydroponics/verb/remove_label()
 
 	set name = "Remove Label"
@@ -452,7 +452,8 @@
 	toxins =         max(0,min(toxins,10))
 
 /obj/machinery/portable_atmospherics/hydroponics/proc/mutate_species()
-
+	return
+	/*
 	var/previous_plant = seed.display_name
 	var/newseed = seed.get_mutant_variant()
 	if(newseed in SSplants.seeds)
@@ -472,6 +473,7 @@
 	visible_message("<span class='danger'>The </span><span class='notice'>[previous_plant]</span><span class='danger'> has suddenly mutated into </span><span class='notice'>[seed.display_name]!</span>")
 
 	return
+	*/
 
 /obj/machinery/portable_atmospherics/hydroponics/attackby(var/obj/item/O as obj, var/mob/user as mob)
 
@@ -509,7 +511,7 @@
 
 
 
-	else if(istype(O, /obj/item/weapon/card/id))
+	else if(istype(O, /obj/item/weapon/card/id) && mechanical)
 		var/obj/item/weapon/card/id/id = O
 		if(!req_access_faction || req_access_faction == "")
 			var/datum/world_faction/faction = get_faction(id.selected_faction)
@@ -550,7 +552,7 @@
 			if(seed)
 				var/needed_skill = seed.mysterious ? SKILL_ADEPT : SKILL_BASIC
 				if(!user.skill_check(SKILL_BOTANY, needed_skill))
-					health -= rand(40,60)
+					plant_health -= rand(40,60)
 					check_health(1)
 			update_icon()
 		else
@@ -627,7 +629,7 @@
 	var/needed_skill = seed.mysterious ? SKILL_ADEPT : SKILL_BASIC
 	if(prob(user.skill_fail_chance(SKILL_BOTANY, 40, needed_skill)))
 		dead = 1
-		health = 0
+		plant_health = 0
 
 	qdel(S)
 	check_health()
@@ -650,7 +652,7 @@
 
 /obj/machinery/portable_atmospherics/hydroponics/examine(mob/user)
 	. = ..(user)
-	if(!connected_faction)
+	if(mechanical && !connected_faction)
 		to_chat(user, "The tray is not connected to an organization and so it is not growing correctly.")
 	if(!seed)
 		to_chat(user, "\The [src] is empty.")
@@ -666,7 +668,7 @@
 
 		if(dead)
 			to_chat(user, "<span class='danger'>The [seed.display_name] plant is dead.</span>")
-		else if(health <= (seed.get_trait(TRAIT_ENDURANCE)/ 2))
+		else if(plant_health <= (seed.get_trait(TRAIT_ENDURANCE)/ 2))
 			to_chat(user, "The [seed.display_name] plant looks <span class='danger'>unhealthy</span>.")
 
 	if(mechanical && Adjacent(user))

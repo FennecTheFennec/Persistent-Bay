@@ -1582,16 +1582,6 @@
 	id = "bomber_brown"
 	build_path = /obj/item/clothing/suit/storage/toggle/bomber
 
-/datum/design/item/autotailor/suit/overcoats/leather_brown
-	name = "leather jacket - brown"
-	id = "leather_brown"
-	build_path = /obj/item/clothing/suit/storage/toggle/brown_jacket
-
-/datum/design/item/autotailor/suit/overcoats/leather_black
-	name = "leather jacket - black"
-	id = "leather_black"
-	build_path = /obj/item/clothing/suit/storage/leather_jacket
-
 /datum/design/item/autotailor/suit/overcoats/leather_coat_black
 	name = "leather coat - black"
 	id = "leather_coat_black"
@@ -2342,3 +2332,8 @@
 	name = "turtleneck sweater"
 
 
+/datum/design/item/autotailor/tunic/executive_tunic
+	name = "Tunic - black executive tunic"
+	id = "executive_tunic"
+	build_path = /obj/item/clothing/accessory/tunic/exec
+	materials = list(MATERIAL_CLOTH = 4000)

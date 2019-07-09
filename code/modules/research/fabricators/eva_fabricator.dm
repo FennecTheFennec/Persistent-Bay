@@ -21,8 +21,8 @@
 
 /obj/machinery/fabricator/eva_fabricator/can_connect(var/datum/world_faction/trying, var/mob/M)
 	var/datum/machine_limits/limits = trying.get_limits()
-	
-	
+
+
 	if(M && !has_access(list(core_access_machine_linking), list(), M.GetAccess(trying.uid)))
 		to_chat(M, "You do not have access to link machines to [trying.name].")
 		return 0
@@ -175,6 +175,46 @@
 	id = "sci_softhelmet"
 	build_path = /obj/item/clothing/head/helmet/space/science
 
+/datum/design/item/voidfab/softsuit/helmet/fishbowl
+	name = "fishbowl softsuit helmet"
+	id = "softhelm_fish"
+	build_path = /obj/item/clothing/head/helmet/space/fishbowl
+
+/datum/design/item/voidfab/softsuit/helmet/emergency/fishbowl
+	name = "emergency fishbowl softsuit helmet"
+	id = "emr_softhelm_fish"
+	build_path = /obj/item/clothing/head/helmet/space/emergency
+/datum/design/item/voidfab/softsuit/suit/emergency/fishbowl
+	name = "emergency fishbowl softsuit"
+	id = "emr_softsuit_fish"
+	build_path = /obj/item/clothing/suit/space/emergency
+
+/datum/design/item/voidfab/softsuit/helmet/emergency
+	name = "emergency softsuit helmet"
+	id = "emr_softhelm"
+	build_path = /obj/item/clothing/head/helmet/space/emergency/alt
+/datum/design/item/voidfab/softsuit/suit/emergency
+	name = "emergency softsuit"
+	id = "emr_softsuit"
+	build_path = /obj/item/clothing/suit/space/emergency/alt
+
+/datum/design/item/voidfab/softsuit/helmet/civilian
+	name = "civilian softsuit helmet"
+	id = "civ_softhelm"
+	build_path = /obj/item/clothing/head/helmet/space/civilian
+/datum/design/item/voidfab/softsuit/suit/civilian
+	name = "civilian softsuit"
+	id = "civ_softsuit"
+	build_path = /obj/item/clothing/suit/space/civilian
+
+/datum/design/item/voidfab/softsuit/helmet/civilian/alt
+	name = "civilian alternate softsuit helmet"
+	id = "civ_softhelm_alt"
+	build_path = /obj/item/clothing/head/helmet/space
+/datum/design/item/voidfab/softsuit/suit/civilian/alt
+	name = "civilian alternate softsuit"
+	id = "civ_softsuit_alt"
+	build_path = /obj/item/clothing/suit/space
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,15 +229,49 @@
 
 ///////////////////////////////////////////////////////////////
 
+/*Tanks*/
 /datum/design/item/genfab/eva/tank
-	name = "air tank"
+	name = "Blue EVA air tank"
 	build_path = /obj/item/weapon/tank/oxygen/empty
-	materials = list(MATERIAL_STEEL = 2 SHEETS)
+	materials = list(MATERIAL_STEEL = 2000)
+/datum/design/item/genfab/eva/tank/yellow
+	name = "Yellow EVA air tank"
+	build_path = /obj/item/weapon/tank/oxygen/yellow/empty
+/datum/design/item/genfab/eva/tank/red
+	name = "Red EVA air tank"
+	build_path = /obj/item/weapon/tank/oxygen/red/empty
+/datum/design/item/genfab/eva/tank/nitrogen //Its a bit of a different size or something
+	name = "Red EVA nitrogen tank"
+	build_path = /obj/item/weapon/tank/nitrogen/empty
 
-/datum/design/item/genfab/eva/adv/tank_double
-	name = "double-capacity air tank"
+/datum/design/item/genfab/eva/adv/tank/small
+	name = "Small blue emergency tank"
+	build_path = /obj/item/weapon/tank/emergency/empty
+	materials = list(MATERIAL_STEEL = 850)
+/datum/design/item/genfab/eva/adv/tank/small/orange
+	name = "Small orange emergency tank"
+	build_path = /obj/item/weapon/tank/emergency/phoron/empty
+/datum/design/item/genfab/eva/adv/tank/small/red
+	name = "Small red emergency tank"
+	build_path = /obj/item/weapon/tank/emergency/nitrogen/empty
+/datum/design/item/genfab/eva/adv/tank/small/phoron
+	name = "Small red emergency phoron tank(phorosian)"
+	build_path = /obj/item/weapon/tank/emergency/phoron/empty
+
+/datum/design/item/genfab/eva/adv/tank/small/extended
+	name = "Extended-capacity small yellow air tank"
 	build_path = /obj/item/weapon/tank/emergency/oxygen/engi/empty
-	materials = list(MATERIAL_STEEL = 5 SHEETS)
+	materials = list(MATERIAL_STEEL = 950)
+
+/datum/design/item/genfab/eva/adv/tank/double
+	name = "Double-capacity small yellow air tank"
+	build_path = /obj/item/weapon/tank/emergency/oxygen/double/empty
+	materials = list(MATERIAL_STEEL = 1200)
+/datum/design/item/genfab/eva/adv/tank/double/red
+	name = "Double-capacity small red air tank"
+	build_path = /obj/item/weapon/tank/emergency/nitrogen/double/empty
+/*End tanks*/
+
 
 /datum/design/item/genfab/eva/oxygen_candle
 	name = "oxygen candle"
@@ -315,9 +389,9 @@
 	materials = list(MATERIAL_STEEL = 2 SHEETS)
 	build_path = /obj/item/weapon/pickaxe
 
-/datum/design/item/genfab/miningtools/hammer // 40
-	materials = list(MATERIAL_STEEL = 2 SHEETS)
-	build_path = /obj/item/weapon/pickaxe/hammer
+//	/datum/design/item/genfab/miningtools/hammer // 40
+//		materials = list(MATERIAL_STEEL = 2 SHEETS)
+//		build_path = /obj/item/weapon/pickaxe/hammer
 
 /datum/design/item/genfab/miningtools/shovel
 	build_path = /obj/item/weapon/shovel
@@ -333,7 +407,7 @@
 	materials = list(MATERIAL_STEEL = 2 SHEETS, MATERIAL_GLASS = 2 SHEETS, MATERIAL_DIAMOND = 3 SHEETS)
 	build_path = /obj/item/weapon/pickaxe/drill
 	research = "mining_1"
-	
+
 /datum/design/item/genfab/miningtools/adv/jackhammer // 20
 	req_tech = list(TECH_MATERIAL = 3, TECH_POWER = 2, TECH_ENGINEERING = 2)
 	materials = list(MATERIAL_STEEL = 4 SHEETS, MATERIAL_COPPER = 2 SHEETS, MATERIAL_SILVER = 1 SHEETS)
@@ -351,8 +425,8 @@
 	materials = list(MATERIAL_STEEL = 2 SHEETS, MATERIAL_GLASS = 2 SHEETS, MATERIAL_DIAMOND = 3 SHEETS)
 	build_path = /obj/item/weapon/pickaxe/diamonddrill
 	research = "mining_4"
-	
-	
+
+
 /datum/design/item/genfab/miningtools/adv/plasmacutter
 	req_tech = list(TECH_MATERIAL = 4, TECH_PHORON = 3, TECH_ENGINEERING = 3)
 	materials = list(MATERIAL_STEEL = 2 SHEETS, MATERIAL_GLASS = 1 SHEETS, MATERIAL_GOLD = 1 SHEETS, MATERIAL_PHORON = 2 SHEETS)

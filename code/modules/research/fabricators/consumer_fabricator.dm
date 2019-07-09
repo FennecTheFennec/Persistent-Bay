@@ -66,7 +66,11 @@
 	build_path = /obj/item/weapon/storage/bag/plasticbag
 	materials = list(MATERIAL_PLASTIC = 0.5 SHEETS)
 
-/datum/design/item/consumerfab/consumer/wrapping_paper
+/datum/design/item/consumerfab/consumer/package_wrap_paper
+	build_path = /obj/item/stack/package_wrap/twenty_five
+	materials = list(MATERIAL_WOOD = 0.5 SHEETS)
+
+/datum/design/item/consumerfab/consumer/wrapping_paper/gift
 	build_path = /obj/item/weapon/wrapping_paper
 	materials = list(MATERIAL_WOOD = 0.5 SHEETS)
 
@@ -86,6 +90,15 @@
 	build_path = /obj/item/instrument/guitar
 	materials = list(MATERIAL_WOOD = 1.5 SHEETS, MATERIAL_STEEL = 1 SHEET)
 
+/datum/design/item/consumerfab/consumer/canvas
+	build_path = /obj/item/frame/canvas/size_m
+	materials = list(MATERIAL_WOOD = 3 SHEETS)
+	build_type = list(CONSUMERFAB, SERVICEFAB)
+/datum/design/item/consumerfab/consumer/canvas/portrait
+	build_path = /obj/item/frame/canvas/size_m/portrait
+
+/datum/design/item/consumerfab/consumer/canvas/landscape
+	build_path = /obj/item/frame/canvas/size_m/landscape
 
 /datum/design/item/consumerfab/consumer/basketball
 	build_path = /obj/item/weapon/basketball
@@ -580,3 +593,16 @@
 	name = "spaceball booster pack"
 	build_path = /obj/item/weapon/pack/spaceball
 	materials = list(MATERIAL_PLASTIC = 0.25 SHEETS)
+////////////////////////////////////////////////////
+//////////////////////VEHICLES//////////////////////
+////////////////////////////////////////////////////
+
+/datum/design/item/consumerfab/vehicles
+	category = "Vehicles"
+	time = 50
+
+/datum/design/item/consumerfab/vehicles/bike
+	name = "Motor bike"
+	id = "m_bike"
+	materials = list(MATERIAL_STEEL = 40000, MATERIAL_TUNGSTEN = 20000, MATERIAL_GLASS = 20000, MATERIAL_GOLD = 20000)
+	build_path = /obj/vehicle/bike

@@ -1,3 +1,6 @@
+#define EJECT_ALL -1
+#define EJECT_ONE 0
+
 /*
 Fabricators
 A reworked and modular system intended to differentiate the production of items from RnD through specialized machines, in addition to giving them a nicer
@@ -79,6 +82,11 @@ as their designs, in a single .dm file. voidsuit_fabricator.dm is an entirely co
 	if(!istype(circuit))
 		CRASH("[src]\ref[src] no circuit found for the fabricator")
 
+/obj/machinery/fabricator/Destroy()
+	can_disconnect(connected_faction)
+	..()
+	QDEL_NULL(src)
+
 /obj/machinery/fabricator/Process()
 	..()
 	if(stat)
@@ -102,7 +110,7 @@ as their designs, in a single .dm file. voidsuit_fabricator.dm is an entirely co
 
 /obj/machinery/fabricator/dismantle()
 	for(var/f in materials)
-		eject_materials(f, -1)
+		eject_materials(f, EJECT_ALL)
 	..()
 
 /obj/machinery/fabricator/RefreshParts()
@@ -159,11 +167,12 @@ as their designs, in a single .dm file. voidsuit_fabricator.dm is an entirely co
 			data["design_icon"] = user.browse_rsc_icon(selected_design.builds.icon, selected_design.builds.icon_state)
 			if(selected_design.research && selected_design.research != "")
 				var/datum/tech_entry/entry = SSresearch.files.get_tech_entry(selected_design.research)
-				if(!has_research(selected_design.research))
-					data["design_research"] = "<font color='red'>" + entry.name + "</font>"
-				else
-					data["design_research"] = "<font color='green'>" + entry.name + "</font>"
-				data["disk_uses"] = get_uses()
+				if(entry)
+					if(!has_research(selected_design.research))
+						data["design_research"] = "<font color='red'>" + entry.name + "</font>"
+					else
+						data["design_research"] = "<font color='green'>" + entry.name + "</font>"
+					data["disk_uses"] = get_uses()
 
 	if(menu == 2)
 		data["queue"] = get_queue_names()
@@ -293,26 +302,44 @@ as their designs, in a single .dm file. voidsuit_fabricator.dm is an entirely co
 	var/material = stack.material.name
 	var/stack_singular = "[stack.material.use_name] [stack.material.sheet_singular_name]" // eg "steel sheet", "wood plank"
 	var/stack_plural = "[stack.material.use_name] [stack.material.sheet_plural_name]" // eg "steel sheets", "wood planks"
-	var/amnt = stack.perunit
 
 	if(!(material in materials))
 		to_chat(user, "<span class=warning>\The [src] does not accept [stack_plural]!</span>")
 		return
 
-	if(materials[material] + amnt <= res_max_amount)
-		if(stack && stack.amount >= 1)
-			var/count = 0
-			if(metal_load_anim)
-				overlays += "fab-load-[material]"
-				spawn(10)
-					overlays -= "fab-load-[material]"
-			while(materials[material] + amnt <= res_max_amount && stack.amount >= 1)
-				materials[material] += amnt
-				stack.use(1)
-				count++
-			to_chat(user, "You insert [count] [count == 1 ? stack_singular : stack_plural] into the fabricator.")// 0 steel sheets, 1 steel sheet, 2 steel sheets, etc
+	var/stackMatter = stack.material.get_matter()
+	for(var/mat in stackMatter)
+		stackMatter[mat] = round(stackMatter[mat] * stack.matter_multiplier)
+
+	if(stack.reinf_material)
+		var/stackReinfMatter = stack.reinf_material.get_matter()
+		for(var/rmat in stackReinfMatter)
+			LAZYASSOC(stackMatter, rmat)
+			stackMatter[rmat] += stackReinfMatter[rmat] * 0.5 * stack.matter_multiplier
+
+	var/can_fit = TRUE
+	var/count = 0
+	while(can_fit && stack.amount >= 1)
+		for(var/mat in stackMatter)
+			if(materials[mat] + stackMatter[mat] > res_max_amount)
+				can_fit = FALSE
+				break
+
+		if(can_fit)
+			for(var/mat in stackMatter)
+				materials[mat] += stackMatter[mat]
+				
+			stack.use(1)
+			count++
+	
+	if(count)
+		to_chat(user, "You insert [count] [count == 1 ? stack_singular : stack_plural] into the fabricator.")	// 0 steel sheets, 1 steel sheet, 2 steel sheets, etc
+		if(metal_load_anim)
+			overlays += "fab-load-[material]"
+			spawn(10)
+				overlays -= "fab-load-[material]"
 	else
-		to_chat(user, "The fabricator cannot hold more [stack_plural].")// use the plural form even if the given sheet is singular
+		to_chat(user, SPAN_NOTICE("The fabricator cannot hold any more [stack_plural]."))	// use the plural form even if the given sheet is singular
 
 	update_busy()
 
@@ -531,7 +558,7 @@ as their designs, in a single .dm file. voidsuit_fabricator.dm is an entirely co
 
 	for(var/material in materials)
 		if(!(material in design_materials))
-			eject_materials(material, -1) // Dump all the materials not used in designs so that players don't use materials on code changes.
+			eject_materials(material, EJECT_ALL) // Dump all the materials not used in designs so that players don't use materials on code changes.
 
 	materials |= design_materials
 	materials &= design_materials
@@ -551,7 +578,7 @@ as their designs, in a single .dm file. voidsuit_fabricator.dm is an entirely co
 			. += list(list("reg" = R.name, "amt" = R.volume))
 
 /obj/machinery/fabricator/proc/eject_materials(var/material, var/amount) // 0 amount = 0 means ejecting a full stack; -1 means eject everything
-	var/recursive = amount == -1 ? 1 : 0
+	var/recursive = 0
 	material = lowertext(material)
 	var/material/M = SSmaterials.get_material_by_name(material)
 	var/stacktype = M.stack_type
@@ -562,15 +589,16 @@ as their designs, in a single .dm file. voidsuit_fabricator.dm is an entirely co
 
 	var/obj/item/stack/material/S = new stacktype(loc)
 	if(amount <= 0)
+		recursive = amount
 		amount = S.max_amount
-	var/ejected = min(round(materials[material] / S.perunit), amount)
+	var/ejected = min(round(materials[material] / ONE_SHEET), amount)
 	S.amount = min(ejected, amount)
 	if(S.amount <= 0)
 		qdel(S)
 		return
-	materials[material] -= ejected * S.perunit
-	if(recursive && materials[material] >= S.perunit)
-		eject_materials(material, -1)
+	materials[material] -= ejected * ONE_SHEET
+	if(recursive && materials[material] >= ONE_SHEET)
+		eject_materials(material, EJECT_ALL)
 	update_busy()
 
 /obj/machinery/fabricator/proc/sync()
@@ -585,3 +613,6 @@ as their designs, in a single .dm file. voidsuit_fabricator.dm is an entirely co
 		files.RefreshResearch()
 		sync_message = "Sync complete."
 	update_categories()
+
+#undef EJECT_ONE
+#undef EJECT_ALL

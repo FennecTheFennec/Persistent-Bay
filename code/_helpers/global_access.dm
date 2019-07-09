@@ -45,6 +45,8 @@
 			return global.SSairflow;
 		if("SSalarm")
 			return global.SSalarm;
+		if("SSao")
+			return global.SSao;
 		if("SSasteroid")
 			return global.SSasteroid;
 		if("SSatoms")
@@ -385,8 +387,6 @@
 			return global.decls_repository;
 		if("default_material_composition")
 			return global.default_material_composition;
-		if("default_mobloc")
-			return global.default_mobloc;
 		if("default_onmob_icons")
 			return global.default_onmob_icons;
 		if("default_pai_software")
@@ -853,8 +853,6 @@
 			return global.station_account;
 		if("station_date")
 			return global.station_date;
-		if("stool_cache")
-			return global.stool_cache;
 		if("stored_shock_by_ref")
 			return global.stored_shock_by_ref;
 		if("string_part_flags")
@@ -1046,6 +1044,8 @@
 			global.SSairflow=newval;
 		if("SSalarm")
 			global.SSalarm=newval;
+		if("SSao")
+			global.SSao=newval;
 		if("SSasteroid")
 			global.SSasteroid=newval;
 		if("SSatoms")
@@ -1386,8 +1386,6 @@
 			global.decls_repository=newval;
 		if("default_material_composition")
 			global.default_material_composition=newval;
-		if("default_mobloc")
-			global.default_mobloc=newval;
 		if("default_onmob_icons")
 			global.default_onmob_icons=newval;
 		if("default_pai_software")
@@ -1854,8 +1852,6 @@
 			global.station_account=newval;
 		if("station_date")
 			global.station_date=newval;
-		if("stool_cache")
-			global.stool_cache=newval;
 		if("stored_shock_by_ref")
 			global.stored_shock_by_ref=newval;
 		if("string_part_flags")
@@ -2024,6 +2020,7 @@
 	"SSair",
 	"SSairflow",
 	"SSalarm",
+	"SSao",
 	"SSasteroid",
 	"SSatoms",
 	"SSautosave",
@@ -2194,7 +2191,6 @@
 	"debug_verbs",
 	"decls_repository",
 	"default_material_composition",
-	"default_mobloc",
 	"default_onmob_icons",
 	"default_pai_software",
 	"defer_powernet_rebuild",
@@ -2428,7 +2424,6 @@
 	"sqlport",
 	"station_account",
 	"station_date",
-	"stool_cache",
 	"stored_shock_by_ref",
 	"string_part_flags",
 	"string_slot_flags",
